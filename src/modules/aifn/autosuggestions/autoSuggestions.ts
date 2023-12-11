@@ -4,7 +4,7 @@ import { useModelsStore } from '~/modules/llms/store-llms';
 import { useChatStore } from '~/common/state/store-chats';
 
 
-const suggestUserFollowUpFn: VChatFunctionIn = {
+/*const suggestUserFollowUpFn: VChatFunctionIn = {
   name: 'suggest_user_prompt',
   description: 'Surprises the user with a thought-provoking question/prompt/contrarian idea',
   parameters: {
@@ -21,7 +21,7 @@ const suggestUserFollowUpFn: VChatFunctionIn = {
     },
     required: ['question_as_user', 'title'],
   },
-};
+};*/
 
 const suggestPlantUMLFn: VChatFunctionIn = {
   name: 'draw_plantuml_diagram',
@@ -35,7 +35,7 @@ const suggestPlantUMLFn: VChatFunctionIn = {
       },
       code: {
         type: 'string',
-        description: 'A valid PlantUML string (@startuml...@enduml) to be rendered as a diagram or mindmap, or an empty string. Quotations should be used, external references and spaces in participants/actors should be avoided.',
+        description: 'A valid PlantUML string (@startuml...@enduml) to be rendered as a diagram or mindmap, or an empty string. Use quotation marks for proper escaping, avoid external references and avoid unescaped spaces in participants/actors.',
       },
     },
     required: ['type', 'code'],
@@ -46,7 +46,7 @@ const suggestPlantUMLFn: VChatFunctionIn = {
 /**
  * Formulates proposals for follow-up questions, prompts, and counterpoints, based on the last 2 chat messages
  */
-export async function autoSuggestions(conversationId: string, assistantMessageId: string) {
+export function autoSuggestions(conversationId: string, assistantMessageId: string, suggestDiagrams: boolean, suggestQuestions: boolean) {
 
   // use valid fast model
   const { funcLLMId } = useModelsStore.getState();
@@ -69,42 +69,43 @@ export async function autoSuggestions(conversationId: string, assistantMessageId
   // const assistantMessageId = assistantMessage.id;
   let assistantMessageText = assistantMessage.text;
 
-
   // Follow-up: Question
-  /*callChatGenerateWithFunctions(funcLLMId, [
-      { role: 'system', content: systemMessage.text },
-      { role: 'user', content: userMessage.text },
-      { role: 'assistant', content: assistantMessageText },
-    ], [suggestUserFollowUpFn], 'suggest_user_prompt',
-  ).then(chatResponse => {
-    // assistantMessageText += '\n\n' + chatResponse?.function_arguments?.question_as_user + '\n';
-  });*/
-
+  if (suggestQuestions) {
+    // callChatGenerateWithFunctions(funcLLMId, [
+    //     { role: 'system', content: systemMessage.text },
+    //     { role: 'user', content: userMessage.text },
+    //     { role: 'assistant', content: assistantMessageText },
+    //   ], [suggestUserFollowUpFn], 'suggest_user_prompt',
+    // ).then(chatResponse => {
+    //   // assistantMessageText += '\n\n' + chatResponse?.function_arguments?.question_as_user + '\n';
+    // });
+  }
 
   // Follow-up: Auto-Diagrams
-  callChatGenerateWithFunctions(funcLLMId, [
-      { role: 'system', content: systemMessage.text },
-      { role: 'user', content: userMessage.text },
-      { role: 'assistant', content: assistantMessageText },
-    ], [suggestPlantUMLFn], 'draw_plantuml_diagram',
-  ).then(chatResponse => {
+  if (suggestDiagrams) {
+    void callChatGenerateWithFunctions(funcLLMId, [
+        { role: 'system', content: systemMessage.text },
+        { role: 'user', content: userMessage.text },
+        { role: 'assistant', content: assistantMessageText },
+      ], [suggestPlantUMLFn], 'draw_plantuml_diagram',
+    ).then(chatResponse => {
 
-    // parse the output PlantUML string, if any
-    const functionArguments = chatResponse?.function_arguments ?? null;
-    if (functionArguments) {
-      const { code, type }: { code: string, type: string } = functionArguments as any;
-      if (code && type) {
+      // parse the output PlantUML string, if any
+      const functionArguments = chatResponse?.function_arguments ?? null;
+      if (functionArguments) {
+        const { code, type }: { code: string, type: string } = functionArguments as any;
+        if (code && type) {
 
-        // validate the code
-        const plantUML = code.trim();
-        if (!plantUML.startsWith('@start') || !(plantUML.endsWith('@enduml') || plantUML.endsWith('@endmindmap'))) return;
+          // validate the code
+          const plantUML = code.trim();
+          if (!plantUML.startsWith('@start') || !(plantUML.endsWith('@enduml') || plantUML.endsWith('@endmindmap'))) return;
 
-        // append the PlantUML diagram to the assistant response
-        assistantMessageText += `\n\n\`\`\`${type}.diagram\n${plantUML}\n\`\`\`\n`;
-        editMessage(conversationId, assistantMessageId, { text: assistantMessageText }, false);
-
+          // append the PlantUML diagram to the assistant response
+          assistantMessageText += `\n\n\`\`\`${type}.diagram\n${plantUML}\n\`\`\`\n`;
+          editMessage(conversationId, assistantMessageId, { text: assistantMessageText }, false);
+        }
       }
-    }
-  });
+    });
+  }
 
 }

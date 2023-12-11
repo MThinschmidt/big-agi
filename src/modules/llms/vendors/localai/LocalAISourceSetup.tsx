@@ -1,52 +1,45 @@
 import * as React from 'react';
 import { z } from 'zod';
 
-import { Box, Button, Typography } from '@mui/joy';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
-import SyncIcon from '@mui/icons-material/Sync';
+import { Typography } from '@mui/joy';
 
-import { apiQuery } from '~/modules/trpc/trpc.client';
-
-import { FormInputKey } from '~/common/components/FormInputKey';
+import { FormInputKey } from '~/common/components/forms/FormInputKey';
 import { InlineError } from '~/common/components/InlineError';
 import { Link } from '~/common/components/Link';
-import { settingsGap } from '~/common/theme';
+import { SetupFormRefetchButton } from '~/common/components/forms/SetupFormRefetchButton';
+import { apiQuery } from '~/common/util/trpc.client';
 
-import { LLMOptionsOpenAI, ModelVendorOpenAI } from '../openai/openai.vendor';
+import { DModelSourceId, useModelsStore, useSourceSetup } from '../../store-llms';
+import { modelDescriptionToDLLM } from '../openai/OpenAISourceSetup';
 
-import { DLLM, DModelSource, DModelSourceId, useModelsStore, useSourceSetup } from '../../store-llms';
 import { ModelVendorLocalAI } from './localai.vendor';
-
-
-const urlSchema = z.string().url().startsWith('http');
 
 
 export function LocalAISourceSetup(props: { sourceId: DModelSourceId }) {
 
   // external state
-  const {
-    source, normSetup: { oaiHost }, updateSetup, sourceLLMs,
-  } = useSourceSetup(props.sourceId, ModelVendorLocalAI.normalizeSetup);
+  const { source, access, updateSetup } =
+    useSourceSetup(props.sourceId, ModelVendorLocalAI.getAccess);
+
+  // derived state
+  const { oaiHost } = access;
 
   // validate if url is a well formed proper url with zod
+  const urlSchema = z.string().url().startsWith('http');
   const { success: isValidHost } = urlSchema.safeParse(oaiHost);
   const shallFetchSucceed = isValidHost;
 
-  const hasModels = !!sourceLLMs.length;
-
   // fetch models - the OpenAI way
-  const { isFetching, refetch, isError, error } = apiQuery.llmOpenAI.listModels.useQuery({
-    access: ModelVendorOpenAI.normalizeSetup({ oaiHost }),
-  }, {
-    enabled: false, //!sourceLLMs.length && shallFetchSucceed,
-    onSuccess: models => {
-      const llms = source ? models.map(model => localAIToDLLM(model, source)) : [];
-      useModelsStore.getState().addLLMs(llms);
-    },
+  const { isFetching, refetch, isError, error } = apiQuery.llmOpenAI.listModels.useQuery({ access }, {
+    enabled: false, // !sourceHasLLMs && shallFetchSucceed,
+    onSuccess: models => source && useModelsStore.getState().setLLMs(
+      models.models.map(model => modelDescriptionToDLLM(model, source)),
+      props.sourceId,
+    ),
     staleTime: Infinity,
   });
 
-  return <Box sx={{ display: 'flex', flexDirection: 'column', gap: settingsGap }}>
+  return <>
 
     <Typography level='body-sm'>
       You can use a running <Link href='https://localai.io' target='_blank'>LocalAI</Link> instance as a source for local models.
@@ -61,53 +54,9 @@ export function LocalAISourceSetup(props: { sourceId: DModelSourceId }) {
       value={oaiHost} onChange={value => updateSetup({ oaiHost: value })}
     />
 
-    <Button
-      variant='solid' color={isError ? 'warning' : 'primary'}
-      disabled={!shallFetchSucceed || isFetching}
-      endDecorator={hasModels ? <SyncIcon /> : <FileDownloadIcon />}
-      onClick={() => refetch()}
-      sx={{ minWidth: 120, ml: 'auto' }}
-    >
-      Models
-    </Button>
+    <SetupFormRefetchButton refetch={refetch} disabled={!shallFetchSucceed || isFetching} error={isError} />
 
     {isError && <InlineError error={error} />}
 
-  </Box>;
-}
-
-const NotChatModels: string[] = [];
-
-const ModelHeuristics: { [key: string]: { label: string, contextTokens: number } } = {
-  'ggml-gpt4all-j': {
-    label: 'GPT4All-J',
-    contextTokens: 2048,
-  },
-};
-
-
-function localAIToDLLM(model: { id: string, object: 'model' }, source: DModelSource): DLLM<LLMOptionsOpenAI> {
-  const h = ModelHeuristics[model.id] || {
-    label: model.id
-      .replace('ggml-', '')
-      .replace('.bin', '')
-      .replaceAll('-', ' '),
-    contextTokens: 2048, // conservative default
-  };
-  return {
-    id: `${source.id}-${model.id}`,
-    label: h.label,
-    created: 0,
-    description: 'Local model',
-    tags: [], // ['stream', 'chat'],
-    contextTokens: h.contextTokens,
-    hidden: NotChatModels.includes(model.id),
-    sId: source.id,
-    _source: source,
-    options: {
-      llmRef: model.id,
-      llmTemperature: 0.5,
-      llmResponseTokens: Math.round(h.contextTokens / 8),
-    },
-  };
+  </>;
 }

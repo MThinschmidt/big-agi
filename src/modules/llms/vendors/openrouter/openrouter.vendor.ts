@@ -1,8 +1,12 @@
+import { backendCaps } from '~/modules/backend/state-backend';
+
 import { OpenRouterIcon } from '~/common/components/icons/OpenRouterIcon';
 
-import { IModelVendor } from '../IModelVendor';
+import type { IModelVendor } from '../IModelVendor';
+import type { OpenAIAccessSchema } from '../../transports/server/openai/openai.router';
+import type { VChatFunctionIn, VChatMessageIn, VChatMessageOrFunctionCallOut, VChatMessageOut } from '../../transports/chatGenerate';
 
-import { LLMOptionsOpenAI, ModelVendorOpenAI } from '../openai/openai.vendor';
+import { LLMOptionsOpenAI, openAICallChatGenerate } from '../openai/openai.vendor';
 import { OpenAILLMOptions } from '../openai/OpenAILLMOptions';
 
 import { OpenRouterSourceSetup } from './OpenRouterSourceSetup';
@@ -28,12 +32,13 @@ export interface SourceSetupOpenRouter {
  *  [x] decide whether to do UI work to improve the appearance - prioritized models
  *  [x] works!
  */
-export const ModelVendorOpenRouter: IModelVendor<SourceSetupOpenRouter, LLMOptionsOpenAI> = {
+export const ModelVendorOpenRouter: IModelVendor<SourceSetupOpenRouter, LLMOptionsOpenAI, OpenAIAccessSchema> = {
   id: 'openrouter',
   name: 'OpenRouter',
-  rank: 25,
+  rank: 12,
   location: 'cloud',
   instanceLimit: 1,
+  hasBackendCap: () => backendCaps().hasLlmOpenRouter,
 
   // components
   Icon: OpenRouterIcon,
@@ -41,15 +46,22 @@ export const ModelVendorOpenRouter: IModelVendor<SourceSetupOpenRouter, LLMOptio
   LLMOptionsComponent: OpenAILLMOptions,
 
   // functions
-  initializeSetup: () => ({
+  initializeSetup: (): SourceSetupOpenRouter => ({
     oaiHost: 'https://openrouter.ai/api',
     oaiKey: '',
   }),
-  normalizeSetup: (partialSetup?: Partial<SourceSetupOpenRouter>) => ({
-    oaiHost: '',
-    oaiKey: '',
-    ...partialSetup,
+  getAccess: (partialSetup): OpenAIAccessSchema => ({
+    dialect: 'openrouter',
+    oaiKey: partialSetup?.oaiKey || '',
+    oaiOrg: '',
+    oaiHost: partialSetup?.oaiHost || '',
+    heliKey: '',
+    moderationCheck: false,
   }),
-  callChat: ModelVendorOpenAI.callChat,
-  callChatWithFunctions: ModelVendorOpenAI.callChatWithFunctions,
+  callChatGenerate(llm, messages: VChatMessageIn[], maxTokens?: number): Promise<VChatMessageOut> {
+    return openAICallChatGenerate(this.getAccess(llm._source.setup), llm.options, messages, null, null, maxTokens);
+  },
+  callChatGenerateWF(llm, messages: VChatMessageIn[], functions: VChatFunctionIn[] | null, forceFunctionName: string | null, maxTokens?: number): Promise<VChatMessageOrFunctionCallOut> {
+    return openAICallChatGenerate(this.getAccess(llm._source.setup), llm.options, messages, functions, forceFunctionName, maxTokens);
+  },
 };
