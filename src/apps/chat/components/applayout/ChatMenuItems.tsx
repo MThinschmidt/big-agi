@@ -5,14 +5,12 @@ import CheckBoxOutlineBlankOutlinedIcon from '@mui/icons-material/CheckBoxOutlin
 import CheckBoxOutlinedIcon from '@mui/icons-material/CheckBoxOutlined';
 import ClearIcon from '@mui/icons-material/Clear';
 import CompressIcon from '@mui/icons-material/Compress';
-import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import ForkRightIcon from '@mui/icons-material/ForkRight';
 import SettingsSuggestIcon from '@mui/icons-material/SettingsSuggest';
 
 import type { DConversationId } from '~/common/state/store-chats';
 import { KeyStroke } from '~/common/components/KeyStroke';
-import { closeLayoutMenu } from '~/common/layout/store-applayout';
-import { useUICounter } from '~/common/state/store-ui';
+import { useOptimaDrawers } from '~/common/layout/optima/useOptimaDrawers';
 
 import { useChatShowSystemMessages } from '../../store-app-chat';
 
@@ -25,12 +23,11 @@ export function ChatMenuItems(props: {
   setIsMessageSelectionMode: (isMessageSelectionMode: boolean) => void,
   onConversationBranch: (conversationId: DConversationId, messageId: string | null) => void,
   onConversationClear: (conversationId: DConversationId) => void,
-  onConversationExport: (conversationId: DConversationId | null) => void,
   onConversationFlatten: (conversationId: DConversationId) => void,
 }) {
 
   // external state
-  const { touch: shareTouch } = useUICounter('export-share');
+  const { closePageMenu } = useOptimaDrawers();
   const [showSystemMessages, setShowSystemMessages] = useChatShowSystemMessages();
 
   // derived state
@@ -39,7 +36,7 @@ export function ChatMenuItems(props: {
 
   const closeMenu = (event: React.MouseEvent) => {
     event.stopPropagation();
-    closeLayoutMenu();
+    closePageMenu();
   };
 
   const handleConversationClear = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -50,12 +47,6 @@ export function ChatMenuItems(props: {
   const handleConversationBranch = (event: React.MouseEvent<HTMLDivElement>) => {
     closeMenu(event);
     props.conversationId && props.onConversationBranch(props.conversationId, null);
-  };
-
-  const handleConversationExport = (event: React.MouseEvent<HTMLDivElement>) => {
-    closeMenu(event);
-    props.onConversationExport(!disabled ? props.conversationId : null);
-    shareTouch();
   };
 
   const handleConversationFlatten = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -106,17 +97,10 @@ export function ChatMenuItems(props: {
       </span>
     </MenuItem>
 
-    <MenuItem disabled={!props.hasConversations} onClick={handleConversationExport}>
-      <ListItemDecorator>
-        <FileDownloadIcon />
-      </ListItemDecorator>
-      Share / Export ...
-    </MenuItem>
-
     <MenuItem disabled={disabled} onClick={handleConversationClear}>
       <ListItemDecorator><ClearIcon /></ListItemDecorator>
       <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'space-between', gap: 1 }}>
-        Reset
+        Reset Chat
         {!disabled && <KeyStroke combo='Ctrl + Alt + X' />}
       </Box>
     </MenuItem>

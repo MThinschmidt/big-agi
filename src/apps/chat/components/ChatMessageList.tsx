@@ -6,16 +6,17 @@ import { SxProps } from '@mui/joy/styles/types';
 
 import type { DiagramConfig } from '~/modules/aifn/digrams/DiagramsModal';
 
-import { ShortcutKeyName, useGlobalShortcut } from '~/common/components/useGlobalShortcut';
 import { InlineError } from '~/common/components/InlineError';
+import { PreferencesTab, useOptimaLayout } from '~/common/layout/optima/useOptimaLayout';
+import { ShortcutKeyName, useGlobalShortcut } from '~/common/components/useGlobalShortcut';
 import { createDMessage, DConversationId, DMessage, getConversation, useChatStore } from '~/common/state/store-chats';
-import { openLayoutPreferences } from '~/common/layout/store-applayout';
-import { useCapabilityElevenLabs, useCapabilityProdia } from '~/common/components/useCapabilities';
+import { useCapabilityElevenLabs } from '~/common/components/useCapabilities';
 
 import { ChatMessageMemo } from './message/ChatMessage';
 import { CleanerMessage, MessagesSelectionHeader } from './message/CleanerMessage';
 import { PersonaSelector } from './persona-selector/PersonaSelector';
 import { useChatShowSystemMessages } from '../store-app-chat';
+import { useScrollToBottom } from './scroll-to-bottom/useScrollToBottom';
 
 
 /**
@@ -23,13 +24,14 @@ import { useChatShowSystemMessages } from '../store-app-chat';
  */
 export function ChatMessageList(props: {
   conversationId: DConversationId | null,
-  chatLLMContextTokens?: number,
+  capabilityHasT2I: boolean,
+  chatLLMContextTokens: number | null,
   isMessageSelectionMode: boolean, setIsMessageSelectionMode: (isMessageSelectionMode: boolean) => void,
   onConversationBranch: (conversationId: DConversationId, messageId: string) => void,
-  onConversationExecuteHistory: (conversationId: DConversationId, history: DMessage[]) => void,
-  onTextDiagram: (diagramConfig: DiagramConfig | null) => Promise<any>,
-  onTextImagine: (conversationId: DConversationId, selectedText: string) => Promise<any>,
-  onTextSpeak: (selectedText: string) => Promise<any>,
+  onConversationExecuteHistory: (conversationId: DConversationId, history: DMessage[]) => Promise<void>,
+  onTextDiagram: (diagramConfig: DiagramConfig | null) => void,
+  onTextImagine: (conversationId: DConversationId, selectedText: string) => Promise<void>,
+  onTextSpeak: (selectedText: string) => Promise<void>,
   sx?: SxProps,
 }) {
 
@@ -39,6 +41,8 @@ export function ChatMessageList(props: {
   const [selectedMessages, setSelectedMessages] = React.useState<Set<string>>(new Set());
 
   // external state
+  const { notifyBooting } = useScrollToBottom();
+  const { openPreferencesTab } = useOptimaLayout();
   const [showSystemMessages] = useChatShowSystemMessages();
   const { conversationMessages, historyTokenCount, editMessage, deleteMessage, setMessages } = useChatStore(state => {
     const conversation = state.conversations.find(conversation => conversation.id === props.conversationId);
@@ -50,17 +54,17 @@ export function ChatMessageList(props: {
       setMessages: state.setMessages,
     };
   }, shallow);
-  const { mayWork: isImaginable } = useCapabilityProdia();
   const { mayWork: isSpeakable } = useCapabilityElevenLabs();
 
   // derived state
-  const { conversationId, onConversationBranch, onConversationExecuteHistory, onTextDiagram, onTextImagine, onTextSpeak } = props;
+  const { conversationId, capabilityHasT2I, onConversationBranch, onConversationExecuteHistory, onTextDiagram, onTextImagine, onTextSpeak } = props;
 
 
   // text actions
 
-  const handleRunExample = (text: string) =>
-    conversationId && onConversationExecuteHistory(conversationId, [...conversationMessages, createDMessage('user', text)]);
+  const handleRunExample = React.useCallback(async (text: string) => {
+    conversationId && await onConversationExecuteHistory(conversationId, [...conversationMessages, createDMessage('user', text)]);
+  }, [conversationId, conversationMessages, onConversationExecuteHistory]);
 
 
   // message menu methods proxy
@@ -69,11 +73,11 @@ export function ChatMessageList(props: {
     conversationId && onConversationBranch(conversationId, messageId);
   }, [conversationId, onConversationBranch]);
 
-  const handleConversationRestartFrom = React.useCallback((messageId: string, offset: number) => {
+  const handleConversationRestartFrom = React.useCallback(async (messageId: string, offset: number) => {
     const messages = getConversation(conversationId)?.messages;
     if (messages) {
       const truncatedHistory = messages.slice(0, messages.findIndex(m => m.id === messageId) + offset + 1);
-      conversationId && onConversationExecuteHistory(conversationId, truncatedHistory);
+      conversationId && await onConversationExecuteHistory(conversationId, truncatedHistory);
     }
   }, [conversationId, onConversationExecuteHistory]);
 
@@ -94,26 +98,26 @@ export function ChatMessageList(props: {
   }, [conversationId, editMessage]);
 
   const handleTextDiagram = React.useCallback(async (messageId: string, text: string) => {
-    conversationId && await onTextDiagram({ conversationId: conversationId, messageId, text });
+    conversationId && onTextDiagram({ conversationId: conversationId, messageId, text });
   }, [conversationId, onTextDiagram]);
 
   const handleTextImagine = React.useCallback(async (text: string) => {
-    if (!isImaginable)
-      return openLayoutPreferences(2);
+    if (!capabilityHasT2I)
+      return openPreferencesTab(PreferencesTab.Draw);
     if (conversationId) {
       setIsImagining(true);
       await onTextImagine(conversationId, text);
       setIsImagining(false);
     }
-  }, [conversationId, isImaginable, onTextImagine]);
+  }, [capabilityHasT2I, conversationId, onTextImagine, openPreferencesTab]);
 
   const handleTextSpeak = React.useCallback(async (text: string) => {
     if (!isSpeakable)
-      return openLayoutPreferences(3);
+      return openPreferencesTab(PreferencesTab.Voice);
     setIsSpeaking(true);
     await onTextSpeak(text);
     setIsSpeaking(false);
-  }, [isSpeakable, onTextSpeak]);
+  }, [isSpeakable, onTextSpeak, openPreferencesTab]);
 
 
   // operate on the local selection set
@@ -157,11 +161,19 @@ export function ChatMessageList(props: {
     return { diffMessage: undefined, diffText: undefined };
   }, [conversationMessages]);
 
+
+  // scroll to the very bottom of a new chat
+  React.useEffect(() => {
+    if (conversationId)
+      notifyBooting();
+  }, [conversationId, notifyBooting]);
+
+
   // no content: show the persona selector
 
   const filteredMessages = conversationMessages
-    .filter(m => m.role !== 'system' || showSystemMessages) // hide the System message if the user choses to
-    .reverse(); // 'reverse' is because flexDirection: 'column-reverse' to auto-snap-to-bottom
+    .filter(m => m.role !== 'system' || showSystemMessages); // hide the System message if the user choses to
+
 
   if (!filteredMessages.length)
     return (
@@ -176,18 +188,29 @@ export function ChatMessageList(props: {
     <List sx={{
       p: 0, ...(props.sx || {}),
       // this makes sure that the the window is scrolled to the bottom (column-reverse)
-      display: 'flex', flexDirection: 'column-reverse',
+      display: 'flex',
+      flexDirection: 'column',
       // fix for the double-border on the last message (one by the composer, one to the bottom of the message)
       // marginBottom: '-1px',
     }}>
 
-      {filteredMessages.map((message, idx) =>
+      {props.isMessageSelectionMode && (
+        <MessagesSelectionHeader
+          hasSelected={selectedMessages.size > 0}
+          sumTokens={historyTokenCount}
+          onClose={() => props.setIsMessageSelectionMode(false)}
+          onSelectAll={handleSelectAll}
+          onDeleteMessages={handleSelectionDelete}
+        />
+      )}
+
+      {filteredMessages.map((message, idx, { length: count }) =>
         props.isMessageSelectionMode ? (
 
           <CleanerMessage
             key={'sel-' + message.id}
             message={message}
-            isBottom={idx === 0} remainingTokens={(props.chatLLMContextTokens || 0) - historyTokenCount}
+            remainingTokens={props.chatLLMContextTokens ? (props.chatLLMContextTokens - historyTokenCount) : undefined}
             selected={selectedMessages.has(message.id)} onToggleSelected={handleSelectMessage}
           />
 
@@ -197,7 +220,7 @@ export function ChatMessageList(props: {
             key={'msg-' + message.id}
             message={message}
             diffPreviousText={message === diffMessage ? diffText : undefined}
-            isBottom={idx === 0}
+            isBottom={idx === count - 1}
             isImagining={isImagining} isSpeaking={isSpeaking}
             onConversationBranch={handleConversationBranch}
             onConversationRestartFrom={handleConversationRestartFrom}
@@ -210,18 +233,6 @@ export function ChatMessageList(props: {
           />
 
         ),
-      )}
-
-      {/* Header at the bottom because of 'row-reverse' */}
-      {props.isMessageSelectionMode && (
-        <MessagesSelectionHeader
-          hasSelected={selectedMessages.size > 0}
-          isBottom={filteredMessages.length === 0}
-          sumTokens={historyTokenCount}
-          onClose={() => props.setIsMessageSelectionMode(false)}
-          onSelectAll={handleSelectAll}
-          onDeleteMessages={handleSelectionDelete}
-        />
       )}
 
     </List>

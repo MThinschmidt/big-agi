@@ -1,8 +1,8 @@
 # BIG-AGI 🧠✨
 
-Welcome to big-AGI 👋, the GPT application for professionals that need form, function,
-simplicity, and speed. Powered by the latest models from 7 vendors, including
-open-source, `big-AGI` offers best-in-class Voice and Chat with AI Personas,
+Welcome to big-AGI 👋, the GPT application for professionals that need function, form,
+simplicity, and speed. Powered by the latest models from 11 vendors and
+open-source model servers, `big-AGI` offers best-in-class Voice and Chat with AI Personas,
 visualizations, coding, drawing, calling, and quite more -- all in a polished UX.
 
 Pros use big-AGI. 🚀 Developers love big-AGI. 🤖
@@ -11,7 +11,7 @@ Pros use big-AGI. 🚀 Developers love big-AGI. 🤖
 
 Or fork & run on Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fenricoros%2Fbig-agi&env=OPENAI_API_KEY,OPENAI_API_HOST&envDescription=OpenAI%20KEY%20for%20your%20deployment.%20Set%20HOST%20only%20if%20non-default.)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fenricoros%2Fbig-agi&env=OPENAI_API_KEY&envDescription=Backend%20API%20keys%2C%20optional%20and%20may%20be%20overridden%20by%20the%20UI.&envLink=https%3A%2F%2Fgithub.com%2Fenricoros%2Fbig-AGI%2Fblob%2Fmain%2Fdocs%2Fenvironment-variables.md&project-name=big-agi)
 
 ## 👉 [roadmap](https://github.com/users/enricoros/projects/4/views/2)
 
@@ -21,42 +21,40 @@ shows the current developments and future ideas.
 - Got a suggestion? [_Add your roadmap ideas_](https://github.com/enricoros/big-agi/issues/new?&template=roadmap-request.md)
 - Want to contribute? [_Pick up a task!_](https://github.com/users/enricoros/projects/4/views/4) - _easy_ to _pro_
 
-### What's New in 1.7.1 · Dec 11, 2023 · Attachment Theory 🌟
+## What's New in 1.12.0 · Jan 26, 2024 · AGI Hotline
 
-- **Attachments System Overhaul**: Drag, paste, link, snap, text, images, PDFs and more. [#251](https://github.com/enricoros/big-agi/issues/251)
-- **Desktop Webcam Capture**: Image capture now available as Labs feature. [#253](https://github.com/enricoros/big-agi/issues/253)
-- **Independent Browsing**: Full browsing support with Browserless. [Learn More](https://github.com/enricoros/big-agi/blob/main/docs/config-browse.md)
-- **Overheat LLMs**: Push the creativity with higher LLM temperatures. [#256](https://github.com/enricoros/big-agi/issues/256)
-- **Model Options Shortcut**: Quick adjust with `Ctrl+Shift+O`
-- Optimized Voice Input and Performance
-- Latest Ollama and Oobabooga models
-- For developers: **Password Protection**: HTTP Basic Auth. [Learn How](https://github.com/enricoros/big-agi/blob/main/docs/deploy-authentication.md)
-- [1.7.1]: Improved Ollama chats. [#270](https://github.com/enricoros/big-agi/issues/270)
+https://github.com/enricoros/big-AGI/assets/32999/95ceb03c-945d-4fdd-9a9f-3317beb54f3f
 
-### What's New in 1.6.0 - Nov 28, 2023
+- **Voice Calls**: real-time voice call your personas out of the blue or in relation to a chat [#354](https://github.com/enricoros/big-AGI/issues/354)
+- Support **OpenAI 0125** Models. [#364](https://github.com/enricoros/big-AGI/issues/364)
+- Rename or Auto-Rename chats.  [#222](https://github.com/enricoros/big-AGI/issues/222), [#360](https://github.com/enricoros/big-AGI/issues/360)
+- More control over **Link Sharing** [#356](https://github.com/enricoros/big-AGI/issues/356)
+- **Accessibility** to screen readers [#358](https://github.com/enricoros/big-AGI/issues/358)
+- Export chats to Markdown [#337](https://github.com/enricoros/big-AGI/issues/337)
+- Paste tables from Excel [#286](https://github.com/enricoros/big-AGI/issues/286)
+- Ollama model updates and context window detection fixes [#309](https://github.com/enricoros/big-AGI/issues/309)
 
-- **Web Browsing**: Download web pages within chats - [browsing guide](https://github.com/enricoros/big-agi/blob/main/docs/config-browse.md)
-- **Branching Discussions**: Create new conversations from any message
-- **Keyboard Navigation**: Swift chat navigation with new shortcuts (e.g. ctrl+alt+left/right)
-- **Performance Boost**: Faster rendering for a smoother experience
-- **UI Enhancements**: Refined interface based on user feedback
-- **New Features**: Anthropic Claude 2.1, `/help` command, and Flattener tool
-- **For Developers**: Code quality upgrades and snackbar notifications
+### What's New in 1.11.0 · Jan 16, 2024 · Singularity
 
-### What's New in 1.5.0 - Nov 19, 2023
+https://github.com/enricoros/big-AGI/assets/1590910/a6b8e172-0726-4b03-a5e5-10cfcb110c68
 
-- **Continued Voice**: Engage with hands-free interaction for a seamless experience
-- **Visualization Tool**: Create data representations with our new visualization capabilities
-- **Ollama Local Models**: Leverage local models support with our comprehensive guide
-- **Text Tools**: Enjoy tools including highlight differences to refine your content
-- **Mermaid Diagramming**: Render complex diagrams with our Mermaid language support
-- **OpenAI 1106 Chat Models**: Experience the cutting-edge capabilities of the latest OpenAI models
-- **SDXL Support**: Enhance your image generation with SDXL support for Prodia
-- **Cloudflare OpenAI API Gateway**: Integrate with Cloudflare for a robust API gateway
-- **Helicone for Anthropic**: Utilize Helicone's tools for Anthropic models
+- **Find chats**: search in titles and content, with frequency ranking. [#329](https://github.com/enricoros/big-AGI/issues/329)
+- **Commands**: command auto-completion (type '/'). [#327](https://github.com/enricoros/big-AGI/issues/327)
+- **[Together AI](https://www.together.ai/products#inference)** inference platform support (good speed and newer models). [#346](https://github.com/enricoros/big-AGI/issues/346)
+- Persona Creator history, deletion, custom creation, fix llm API timeouts
+- Enable adding up to five custom OpenAI-compatible endpoints
+- Developer enhancements: new 'Actiles' framework
 
-Check out the [big-AGI open roadmap](https://github.com/users/enricoros/projects/4/views/2), or
-the [past releases changelog](docs/changelog.md).
+### What's New in 1.10.0 · Jan 6, 2024 · The Year of AGI
+
+- **New UI**: for both desktop and mobile, sets the stage for future scale. [#201](https://github.com/enricoros/big-AGI/issues/201)
+- **Conversation Folders**: enhanced conversation organization. [#321](https://github.com/enricoros/big-AGI/issues/321)
+- **[LM Studio](https://lmstudio.ai/)** support and improved token management
+- Resizable panes in split-screen conversations.
+- Large performance optimizations
+- Developer enhancements: new UI framework, updated documentation for proxy settings on browserless/docker
+
+For full details and former releases, check out the [changelog](docs/changelog.md).
 
 ## ✨ Key Features 👊
 
@@ -115,7 +113,7 @@ after installing the required dependencies.
 ```bash
 # .. repeat the steps above up to `npm install`, then:
 npm run build
-npm run start --port 3000
+next start --port 3000
 ```
 
 The app will be running on the specified port, e.g. `http://localhost:3000`.
@@ -146,7 +144,7 @@ Please refer to the [Cloudflare deployment documentation](docs/deploy-cloudflare
 
 Create your GitHub fork, create a Vercel project over that fork, and deploy it. Or press the button below for convenience.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fenricoros%2Fbig-agi&env=OPENAI_API_KEY,OPENAI_API_HOST&envDescription=OpenAI%20KEY%20for%20your%20deployment.%20Set%20HOST%20only%20if%20non-default.)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fenricoros%2Fbig-agi&env=OPENAI_API_KEY&envDescription=Backend%20API%20keys%2C%20optional%20and%20may%20be%20overridden%20by%20the%20UI.&envLink=https%3A%2F%2Fgithub.com%2Fenricoros%2Fbig-AGI%2Fblob%2Fmain%2Fdocs%2Fenvironment-variables.md&project-name=big-agi)
 
 ## Integrations:
 

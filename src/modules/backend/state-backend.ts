@@ -9,9 +9,12 @@ export interface BackendCapabilities {
   hasImagingProdia: boolean;
   hasLlmAnthropic: boolean;
   hasLlmAzureOpenAI: boolean;
+  hasLlmGemini: boolean;
+  hasLlmMistral: boolean;
   hasLlmOllama: boolean;
   hasLlmOpenAI: boolean;
   hasLlmOpenRouter: boolean;
+  hasLlmTogetherAI: boolean;
   hasVoiceElevenLabs: boolean;
 }
 
@@ -30,9 +33,12 @@ const useBackendStore = create<BackendStore>()(
     hasImagingProdia: false,
     hasLlmAnthropic: false,
     hasLlmAzureOpenAI: false,
+    hasLlmGemini: false,
+    hasLlmMistral: false,
     hasLlmOllama: false,
     hasLlmOpenAI: false,
     hasLlmOpenRouter: false,
+    hasLlmTogetherAI: false,
     hasVoiceElevenLabs: false,
 
     loadedCapabilities: false,
@@ -46,7 +52,7 @@ const useBackendStore = create<BackendStore>()(
 );
 
 
-export function useBackendCapsLoader(): [boolean, (capabilities: Partial<BackendCapabilities>) => void] {
+export function useBackendCapsKnowledge(): [boolean, (capabilities: Partial<BackendCapabilities>) => void] {
   return useBackendStore(state => [state.loadedCapabilities, state.setCapabilities], shallow);
 }
 
